@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -47,7 +48,7 @@ func (s *Service) AddSegment(ctx context.Context, productionID string, cmd AddSe
 		return nil
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("新增时间轴区间失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -86,7 +87,7 @@ func (s *Service) UpdateSegment(ctx context.Context, productionID, segmentID str
 		return &domain.NotFoundError{Resource: "时间轴区间"}
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("更新时间轴区间失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -168,7 +169,7 @@ func (s *Service) DeleteSegment(ctx context.Context, productionID, segmentID str
 		return &domain.NotFoundError{Resource: "时间轴区间"}
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("删除时间轴区间失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -203,7 +204,7 @@ func (s *Service) FinalizeTimeline(ctx context.Context, productionID string, met
 		return nil
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("完成时间轴失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }

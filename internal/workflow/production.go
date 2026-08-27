@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
 )
@@ -26,7 +27,7 @@ func (s *Service) UpdateProduction(ctx context.Context, id string, cmd UpdatePro
 		return a.UpdateMetadata(cmd.Title, cmd.Language, cmd.DurationMS, cmd.FrameRate, cmd.Participants)
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("更新制作项目失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }

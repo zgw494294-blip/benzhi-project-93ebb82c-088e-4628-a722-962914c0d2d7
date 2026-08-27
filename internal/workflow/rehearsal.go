@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/timeline"
@@ -51,7 +52,7 @@ func (s *Service) RecordRehearsal(ctx context.Context, productionID string, cmd 
 		return a.AddRehearsal(take, s.now())
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("登记排演失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }

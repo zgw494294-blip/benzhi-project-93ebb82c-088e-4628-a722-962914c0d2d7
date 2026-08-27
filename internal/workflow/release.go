@@ -69,7 +69,7 @@ func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseC
 		return a.SetRelease(snapshot, s.now())
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("发布制作项目失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }

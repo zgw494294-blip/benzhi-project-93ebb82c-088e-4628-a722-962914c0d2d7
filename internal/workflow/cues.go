@@ -61,7 +61,7 @@ func (s *Service) SaveCue(ctx context.Context, productionID string, cmd SaveCueC
 		return a.AddCueVersion(cue, s.now())
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("保存提示稿失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -71,7 +71,7 @@ func (s *Service) WithdrawCue(ctx context.Context, productionID, cueID string, m
 		return a.WithdrawCue(cueID, s.now())
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("撤回提示稿失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -107,7 +107,7 @@ func (s *Service) ValidateForRehearsal(ctx context.Context, productionID string,
 		return a.Production.Transition(domain.StateRehearsing)
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("提交排演校验失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }

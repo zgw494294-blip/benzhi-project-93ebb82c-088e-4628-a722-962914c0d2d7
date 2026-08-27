@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
 )
@@ -15,7 +16,7 @@ func (s *Service) Review(ctx context.Context, productionID string, cmd ReviewCom
 		return a.AddDecision(decision, s.now())
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("提交审校决定失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
@@ -25,7 +26,7 @@ func (s *Service) Approve(ctx context.Context, productionID string, meta Mutatio
 		return a.Approve()
 	})
 	if err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("批准制作项目失败: %v", err)
 	}
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
