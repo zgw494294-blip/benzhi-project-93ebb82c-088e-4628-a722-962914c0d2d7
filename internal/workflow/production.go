@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
 )
@@ -32,7 +33,11 @@ func (s *Service) UpdateProduction(ctx context.Context, id string, cmd UpdatePro
 }
 
 func (s *Service) GetProduction(ctx context.Context, id string) (domain.Aggregate, error) {
-	return s.repo.Get(ctx, id)
+	aggregate, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return domain.Aggregate{}, fmt.Errorf("读取制作项目 %s: %v", id, err)
+	}
+	return aggregate, nil
 }
 
 func (s *Service) ListProductions(ctx context.Context) ([]domain.Production, error) {

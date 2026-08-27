@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
@@ -20,7 +21,7 @@ type DiffResult struct {
 func (s *Service) CueDiff(ctx context.Context, productionID, cueID string, from, to int) (DiffResult, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
-		return DiffResult{}, err
+		return DiffResult{}, fmt.Errorf("读取提示版本项目 %s: %v", productionID, err)
 	}
 	if to != from+1 {
 		return DiffResult{}, domain.NewRuleError("version", "只能比较相邻版本")

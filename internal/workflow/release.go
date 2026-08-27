@@ -23,7 +23,7 @@ type ReleasePreview struct {
 func (s *Service) ReleasePreview(ctx context.Context, productionID string) (ReleasePreview, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
-		return ReleasePreview{}, err
+		return ReleasePreview{}, fmt.Errorf("读取发布预览项目 %s: %v", productionID, err)
 	}
 	if a.Production.State != domain.StateApproved {
 		return ReleasePreview{}, domain.NewRuleError("state", "仅 APPROVED 状态可以预览发布")
@@ -77,7 +77,7 @@ func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseC
 func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("读取 JSON 发布项目 %s: %v", productionID, err)
 	}
 	if a.Release == nil {
 		return nil, &domain.NotFoundError{Resource: "发布快照"}
@@ -91,7 +91,7 @@ func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte,
 func (s *Service) ReleaseVTT(ctx context.Context, productionID string) ([]byte, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("读取 WebVTT 发布项目 %s: %v", productionID, err)
 	}
 	if a.Release == nil {
 		return nil, &domain.NotFoundError{Resource: "发布快照"}

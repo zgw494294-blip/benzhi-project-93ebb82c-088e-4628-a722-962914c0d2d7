@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -176,7 +177,7 @@ func (s *Service) DeleteSegment(ctx context.Context, productionID, segmentID str
 func (s *Service) Windows(ctx context.Context, productionID string) (WindowsResult, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
-		return WindowsResult{}, err
+		return WindowsResult{}, fmt.Errorf("读取候选窗口项目 %s: %v", productionID, err)
 	}
 	windows, conflicts, err := timeline.CandidateWindows(a.Segments, a.Production.DurationMS, s.minimumGapMS)
 	return WindowsResult{Windows: windows, Conflicts: conflicts}, err
