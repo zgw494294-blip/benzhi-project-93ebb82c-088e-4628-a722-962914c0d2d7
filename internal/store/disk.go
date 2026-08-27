@@ -23,6 +23,13 @@ type DiskStore struct {
 	closed   bool
 }
 
+func cloneMutationEnvelope(env SnapshotEnvelope) SnapshotEnvelope {
+	return SnapshotEnvelope{
+		Aggregate:   domain.CloneAggregate(env.Aggregate),
+		Idempotency: env.Idempotency,
+	}
+}
+
 func Open(root string) (*DiskStore, error) {
 	if root == "" {
 		return nil, errors.New("存储目录不能为空")
@@ -109,7 +116,8 @@ func (s *DiskStore) Mutate(ctx context.Context, id string, expected int64, key, 
 	if env.Aggregate.Production.Revision != expected {
 		return domain.Aggregate{}, false, &domain.ConflictError{Expected: expected, Actual: env.Aggregate.Production.Revision}
 	}
-	next := domain.CloneAggregate(env.Aggregate)
+	working := cloneMutationEnvelope(env)
+	next := working.Aggregate
 	if err := fn(&next); err != nil {
 		return domain.Aggregate{}, false, err
 	}
@@ -117,15 +125,15 @@ func (s *DiskStore) Mutate(ctx context.Context, id string, expected int64, key, 
 		return domain.Aggregate{}, false, errors.New("mutation 不得自行修改 revision")
 	}
 	next.Touch(time.Now())
-	if env.Idempotency == nil {
-		env.Idempotency = make(map[string]SavedResult)
+	if working.Idempotency == nil {
+		working.Idempotency = make(map[string]SavedResult)
 	}
-	env.Aggregate = next
-	env.Idempotency[key] = SavedResult{Operation: operation, Aggregate: domain.CloneAggregate(next)}
-	if err := s.commitLocked(id, env, operation); err != nil {
+	working.Aggregate = next
+	working.Idempotency[key] = SavedResult{Operation: operation, Aggregate: domain.CloneAggregate(next)}
+	if err := s.commitLocked(id, working, operation); err != nil {
 		return domain.Aggregate{}, false, err
 	}
-	s.projects[id] = env
+	s.projects[id] = working
 	return domain.CloneAggregate(next), false, nil
 }
 
