@@ -3,6 +3,7 @@ package workflow
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"sync"
 	"time"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/store"
@@ -13,10 +14,15 @@ type Service struct {
 	now           func() time.Time
 	minimumGapMS  int64
 	minimumMargin int64
+	windowsMu     sync.RWMutex
+	windowsCache  map[string]WindowsResult
 }
 
 func New(repo store.Repository) *Service {
-	return &Service{repo: repo, now: time.Now, minimumGapMS: 1200, minimumMargin: 250}
+	return &Service{
+		repo: repo, now: time.Now, minimumGapMS: 1200, minimumMargin: 250,
+		windowsCache: make(map[string]WindowsResult),
+	}
 }
 
 func newID(prefix string) string {

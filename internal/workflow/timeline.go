@@ -178,8 +178,28 @@ func (s *Service) Windows(ctx context.Context, productionID string) (WindowsResu
 	if err != nil {
 		return WindowsResult{}, err
 	}
+	s.windowsMu.RLock()
+	cached, ok := s.windowsCache[productionID]
+	s.windowsMu.RUnlock()
+	if ok {
+		return cloneWindowsResult(cached), nil
+	}
 	windows, conflicts, err := timeline.CandidateWindows(a.Segments, a.Production.DurationMS, s.minimumGapMS)
-	return WindowsResult{Windows: windows, Conflicts: conflicts}, err
+	if err != nil {
+		return WindowsResult{}, err
+	}
+	result := WindowsResult{Windows: windows, Conflicts: conflicts}
+	s.windowsMu.Lock()
+	s.windowsCache[productionID] = cloneWindowsResult(result)
+	s.windowsMu.Unlock()
+	return result, nil
+}
+
+func cloneWindowsResult(in WindowsResult) WindowsResult {
+	return WindowsResult{
+		Windows:   append([]timeline.Window(nil), in.Windows...),
+		Conflicts: append([]timeline.SegmentConflict(nil), in.Conflicts...),
+	}
 }
 
 func (s *Service) FinalizeTimeline(ctx context.Context, productionID string, meta MutationMeta) (Result, error) {
