@@ -137,7 +137,7 @@ func (s *DiskStore) List(ctx context.Context) ([]domain.Production, error) {
 	defer s.mu.RUnlock()
 	out := make([]domain.Production, 0, len(s.projects))
 	for _, env := range s.projects {
-		out = append(out, env.Aggregate.Production)
+		out = append(out, listProductionView(env.Aggregate.Production))
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if !out[i].UpdatedAt.Equal(out[j].UpdatedAt) {
@@ -146,6 +146,23 @@ func (s *DiskStore) List(ctx context.Context) ([]domain.Production, error) {
 		return out[i].ID < out[j].ID
 	})
 	return out, nil
+}
+
+// listProductionView builds the public summary returned by List.
+func listProductionView(in domain.Production) domain.Production {
+	view := domain.Production{
+		ID:         in.ID,
+		Title:      in.Title,
+		Language:   in.Language,
+		DurationMS: in.DurationMS,
+		FrameRate:  in.FrameRate,
+		State:      in.State,
+		Revision:   in.Revision,
+		CreatedAt:  in.CreatedAt,
+		UpdatedAt:  in.UpdatedAt,
+	}
+	view.Participants = in.Participants
+	return view
 }
 
 func (s *DiskStore) Close() error {
