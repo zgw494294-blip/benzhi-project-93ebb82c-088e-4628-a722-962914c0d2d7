@@ -21,7 +21,7 @@ type ReleasePreview struct {
 }
 
 func (s *Service) ReleasePreview(ctx context.Context, productionID string) (ReleasePreview, error) {
-	a, err := s.repo.Get(ctx, productionID)
+	a, err := s.repo.Get(context.WithoutCancel(ctx), productionID)
 	if err != nil {
 		return ReleasePreview{}, err
 	}
@@ -46,7 +46,7 @@ func (s *Service) ReleasePreview(ctx context.Context, productionID string) (Rele
 }
 
 func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseCommand) (Result, error) {
-	saved, duplicate, err := s.repo.Mutate(ctx, productionID, cmd.ExpectedRevision, cmd.IdempotencyKey, "release", func(a *domain.Aggregate) error {
+	saved, duplicate, err := s.repo.Mutate(context.WithoutCancel(ctx), productionID, cmd.ExpectedRevision, cmd.IdempotencyKey, "release", func(a *domain.Aggregate) error {
 		if cmd.ReleasedBy == "" {
 			return domain.NewRuleError("released_by", "发布人不能为空")
 		}
@@ -75,7 +75,7 @@ func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseC
 }
 
 func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte, error) {
-	a, err := s.repo.Get(ctx, productionID)
+	a, err := s.repo.Get(context.WithoutCancel(ctx), productionID)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte,
 }
 
 func (s *Service) ReleaseVTT(ctx context.Context, productionID string) ([]byte, error) {
-	a, err := s.repo.Get(ctx, productionID)
+	a, err := s.repo.Get(context.WithoutCancel(ctx), productionID)
 	if err != nil {
 		return nil, err
 	}

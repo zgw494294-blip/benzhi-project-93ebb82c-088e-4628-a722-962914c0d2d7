@@ -10,7 +10,7 @@ func (s *Service) Review(ctx context.Context, productionID string, cmd ReviewCom
 	if cmd.ID == "" {
 		cmd.ID = newID("decision")
 	}
-	saved, duplicate, err := s.repo.Mutate(ctx, productionID, cmd.ExpectedRevision, cmd.IdempotencyKey, "review", func(a *domain.Aggregate) error {
+	saved, duplicate, err := s.repo.Mutate(context.WithoutCancel(ctx), productionID, cmd.ExpectedRevision, cmd.IdempotencyKey, "review", func(a *domain.Aggregate) error {
 		decision := domain.ReviewDecision{ID: cmd.ID, FindingID: cmd.FindingID, CueID: cmd.CueID, Action: cmd.Action, Reason: cmd.Reason, Reviewer: cmd.Reviewer}
 		return a.AddDecision(decision, s.now())
 	})
@@ -21,7 +21,7 @@ func (s *Service) Review(ctx context.Context, productionID string, cmd ReviewCom
 }
 
 func (s *Service) Approve(ctx context.Context, productionID string, meta MutationMeta) (Result, error) {
-	saved, duplicate, err := s.repo.Mutate(ctx, productionID, meta.ExpectedRevision, meta.IdempotencyKey, "approve", func(a *domain.Aggregate) error {
+	saved, duplicate, err := s.repo.Mutate(context.WithoutCancel(ctx), productionID, meta.ExpectedRevision, meta.IdempotencyKey, "approve", func(a *domain.Aggregate) error {
 		return a.Approve()
 	})
 	if err != nil {
