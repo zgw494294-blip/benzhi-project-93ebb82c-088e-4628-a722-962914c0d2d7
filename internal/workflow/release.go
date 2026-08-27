@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strings"
 
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/domain"
 	"benzhi-project-93ebb82c-088e-4628-a722-962914c0d2d7/internal/timeline"
@@ -85,7 +84,13 @@ func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte,
 	if !a.Release.VerifyHash() {
 		return nil, domain.NewRuleError("content_hash", "持久化发布摘要不一致")
 	}
-	return json.MarshalIndent(a.Release, "", "  ")
+	s.releaseBuffer.Reset()
+	encoder := json.NewEncoder(&s.releaseBuffer)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(a.Release); err != nil {
+		return nil, err
+	}
+	return s.releaseBuffer.Bytes(), nil
 }
 
 func (s *Service) ReleaseVTT(ctx context.Context, productionID string) ([]byte, error) {
@@ -99,15 +104,15 @@ func (s *Service) ReleaseVTT(ctx context.Context, productionID string) ([]byte, 
 	if !a.Release.VerifyHash() {
 		return nil, domain.NewRuleError("content_hash", "持久化发布摘要不一致")
 	}
-	var b strings.Builder
-	b.WriteString("WEBVTT\n\n")
+	s.releaseBuffer.Reset()
+	s.releaseBuffer.WriteString("WEBVTT\n\n")
 	var total int64
 	for _, cue := range a.Release.ApprovedCues {
 		total += cue.EstimatedMS
 	}
-	fmt.Fprintf(&b, "NOTE release_id=%s content_hash=%s cue_count=%d estimated_total_ms=%d decision_count=%d\n\n", a.Release.ID, a.Release.ContentHash, len(a.Release.ApprovedCues), total, len(a.Release.ReviewDecisions))
+	fmt.Fprintf(&s.releaseBuffer, "NOTE release_id=%s content_hash=%s cue_count=%d estimated_total_ms=%d decision_count=%d\n\n", a.Release.ID, a.Release.ContentHash, len(a.Release.ApprovedCues), total, len(a.Release.ReviewDecisions))
 	for i, cue := range a.Release.ApprovedCues {
-		fmt.Fprintf(&b, "%d\n%s --> %s\n%s\n\n", i+1, timeline.FormatTimecode(cue.StartMS), timeline.FormatTimecode(cue.EndMS), cue.Text)
+		fmt.Fprintf(&s.releaseBuffer, "%d\n%s --> %s\n%s\n\n", i+1, timeline.FormatTimecode(cue.StartMS), timeline.FormatTimecode(cue.EndMS), cue.Text)
 	}
-	return []byte(b.String()), nil
+	return s.releaseBuffer.Bytes(), nil
 }

@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"time"
@@ -13,6 +14,7 @@ type Service struct {
 	now           func() time.Time
 	minimumGapMS  int64
 	minimumMargin int64
+	releaseBuffer bytes.Buffer
 }
 
 func New(repo store.Repository) *Service {
