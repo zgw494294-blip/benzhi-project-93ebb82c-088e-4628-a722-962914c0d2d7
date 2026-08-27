@@ -20,6 +20,16 @@ type ReleasePreview struct {
 	DecisionCount      int                  `json:"decision_count"`
 }
 
+type releasePreviewCacheKey struct {
+	productionID string
+	revision     int64
+}
+
+func cloneReleasePreview(preview ReleasePreview) ReleasePreview {
+	preview.ApprovedCues = append([]domain.ApprovedCue(nil), preview.ApprovedCues...)
+	return preview
+}
+
 func (s *Service) ReleasePreview(ctx context.Context, productionID string) (ReleasePreview, error) {
 	a, err := s.repo.Get(ctx, productionID)
 	if err != nil {
@@ -30,6 +40,10 @@ func (s *Service) ReleasePreview(ctx context.Context, productionID string) (Rele
 	}
 	if _, ok := a.LatestValidRehearsal(); !ok {
 		return ReleasePreview{}, domain.NewRuleError("rehearsal", "没有针对当前提示版本的有效排演")
+	}
+	cacheKey := releasePreviewCacheKey{productionID: productionID, revision: a.Production.Revision}
+	if cached, ok := s.releasePreviewCache[cacheKey]; ok {
+		return cloneReleasePreview(cached), nil
 	}
 	items := make([]domain.ApprovedCue, 0)
 	var estimated, windows int64
@@ -42,7 +56,9 @@ func (s *Service) ReleasePreview(ctx context.Context, productionID string) (Rele
 		estimated += e
 		windows += cue.WindowEndMS - cue.WindowStartMS
 	}
-	return ReleasePreview{ProductionRevision: a.Production.Revision, ApprovedCues: items, EstimatedTotalMS: estimated, WindowTotalMS: windows, CueCount: len(items), DecisionCount: len(a.Decisions)}, nil
+	preview := ReleasePreview{ProductionRevision: a.Production.Revision, ApprovedCues: items, EstimatedTotalMS: estimated, WindowTotalMS: windows, CueCount: len(items), DecisionCount: len(a.Decisions)}
+	s.releasePreviewCache[cacheKey] = cloneReleasePreview(preview)
+	return preview, nil
 }
 
 func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseCommand) (Result, error) {

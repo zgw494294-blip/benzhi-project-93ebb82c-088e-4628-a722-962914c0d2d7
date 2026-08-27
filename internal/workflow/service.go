@@ -9,14 +9,21 @@ import (
 )
 
 type Service struct {
-	repo          store.Repository
-	now           func() time.Time
-	minimumGapMS  int64
-	minimumMargin int64
+	repo                store.Repository
+	now                 func() time.Time
+	minimumGapMS        int64
+	minimumMargin       int64
+	releasePreviewCache map[releasePreviewCacheKey]ReleasePreview
 }
 
 func New(repo store.Repository) *Service {
-	return &Service{repo: repo, now: time.Now, minimumGapMS: 1200, minimumMargin: 250}
+	return &Service{
+		repo:                repo,
+		now:                 time.Now,
+		minimumGapMS:        1200,
+		minimumMargin:       250,
+		releasePreviewCache: make(map[releasePreviewCacheKey]ReleasePreview),
+	}
 }
 
 func newID(prefix string) string {
