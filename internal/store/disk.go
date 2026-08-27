@@ -23,6 +23,9 @@ type DiskStore struct {
 	closed   bool
 }
 
+// ErrClosed 表示存储生命周期已经结束。
+var ErrClosed = errors.New("存储已关闭")
+
 func Open(root string) (*DiskStore, error) {
 	if root == "" {
 		return nil, errors.New("存储目录不能为空")
@@ -54,7 +57,7 @@ func (s *DiskStore) Create(ctx context.Context, aggregate domain.Aggregate, key,
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
-		return domain.Aggregate{}, false, errors.New("存储已关闭")
+		return domain.Aggregate{}, false, ErrClosed
 	}
 	if existing, ok := s.projects[id]; ok {
 		if saved, found := existing.Idempotency[key]; found && saved.Operation == operation {
@@ -94,7 +97,7 @@ func (s *DiskStore) Mutate(ctx context.Context, id string, expected int64, key, 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
-		return domain.Aggregate{}, false, errors.New("存储已关闭")
+		return domain.Aggregate{}, false, ErrClosed
 	}
 	env, ok := s.projects[id]
 	if !ok {
