@@ -75,8 +75,6 @@ func (s *DiskStore) Get(ctx context.Context, id string) (domain.Aggregate, error
 	if err := ctx.Err(); err != nil {
 		return domain.Aggregate{}, err
 	}
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	env, ok := s.projects[id]
 	if !ok {
 		return domain.Aggregate{}, &domain.NotFoundError{Resource: "制作项目"}
@@ -133,8 +131,6 @@ func (s *DiskStore) List(ctx context.Context) ([]domain.Production, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	out := make([]domain.Production, 0, len(s.projects))
 	for _, env := range s.projects {
 		out = append(out, env.Aggregate.Production)
@@ -149,8 +145,6 @@ func (s *DiskStore) List(ctx context.Context) ([]domain.Production, error) {
 }
 
 func (s *DiskStore) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.closed = true
 	return nil
 }
