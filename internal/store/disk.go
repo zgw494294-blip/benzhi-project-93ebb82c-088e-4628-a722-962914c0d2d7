@@ -44,9 +44,6 @@ func Open(root string) (*DiskStore, error) {
 }
 
 func (s *DiskStore) Create(ctx context.Context, aggregate domain.Aggregate, key, operation string) (domain.Aggregate, bool, error) {
-	if err := ctx.Err(); err != nil {
-		return domain.Aggregate{}, false, err
-	}
 	if key == "" {
 		return domain.Aggregate{}, false, domain.NewRuleError("idempotencyKey", "幂等键不能为空")
 	}
@@ -85,9 +82,6 @@ func (s *DiskStore) Get(ctx context.Context, id string) (domain.Aggregate, error
 }
 
 func (s *DiskStore) Mutate(ctx context.Context, id string, expected int64, key, operation string, fn Mutation) (domain.Aggregate, bool, error) {
-	if err := ctx.Err(); err != nil {
-		return domain.Aggregate{}, false, err
-	}
 	if key == "" {
 		return domain.Aggregate{}, false, domain.NewRuleError("idempotencyKey", "幂等键不能为空")
 	}
