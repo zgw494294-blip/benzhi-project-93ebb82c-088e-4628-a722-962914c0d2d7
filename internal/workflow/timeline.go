@@ -14,6 +14,11 @@ type WindowsResult struct {
 	Conflicts []timeline.SegmentConflict `json:"conflicts"`
 }
 
+type cachedWindowsResult struct {
+	revision int64
+	result   WindowsResult
+}
+
 func (s *Service) AddSegment(ctx context.Context, productionID string, cmd AddSegmentCommand) (Result, error) {
 	if cmd.ID == "" {
 		cmd.ID = newID("segment")
@@ -178,8 +183,21 @@ func (s *Service) Windows(ctx context.Context, productionID string) (WindowsResu
 	if err != nil {
 		return WindowsResult{}, err
 	}
+	s.windowsMu.RLock()
+	cached, ok := s.windowsCache[productionID]
+	s.windowsMu.RUnlock()
+	if ok && cached.revision == a.Production.Revision {
+		return cached.result, nil
+	}
 	windows, conflicts, err := timeline.CandidateWindows(a.Segments, a.Production.DurationMS, s.minimumGapMS)
-	return WindowsResult{Windows: windows, Conflicts: conflicts}, err
+	if err != nil {
+		return WindowsResult{}, err
+	}
+	result := WindowsResult{Windows: windows, Conflicts: conflicts}
+	s.windowsMu.Lock()
+	s.windowsCache[productionID] = cachedWindowsResult{revision: a.Production.Revision, result: result}
+	s.windowsMu.Unlock()
+	return result, nil
 }
 
 func (s *Service) FinalizeTimeline(ctx context.Context, productionID string, meta MutationMeta) (Result, error) {
