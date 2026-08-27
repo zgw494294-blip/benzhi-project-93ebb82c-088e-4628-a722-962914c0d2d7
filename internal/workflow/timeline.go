@@ -173,8 +173,8 @@ func (s *Service) DeleteSegment(ctx context.Context, productionID, segmentID str
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
 
-func (s *Service) Windows(ctx context.Context, productionID string) (WindowsResult, error) {
-	a, err := s.repo.Get(ctx, productionID)
+func (s *Service) Windows(_ context.Context, productionID string) (WindowsResult, error) {
+	a, err := s.repo.Get(productionID)
 	if err != nil {
 		return WindowsResult{}, err
 	}

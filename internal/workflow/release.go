@@ -20,8 +20,8 @@ type ReleasePreview struct {
 	DecisionCount      int                  `json:"decision_count"`
 }
 
-func (s *Service) ReleasePreview(ctx context.Context, productionID string) (ReleasePreview, error) {
-	a, err := s.repo.Get(ctx, productionID)
+func (s *Service) ReleasePreview(_ context.Context, productionID string) (ReleasePreview, error) {
+	a, err := s.repo.Get(productionID)
 	if err != nil {
 		return ReleasePreview{}, err
 	}
@@ -74,8 +74,8 @@ func (s *Service) Release(ctx context.Context, productionID string, cmd ReleaseC
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
 
-func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte, error) {
-	a, err := s.repo.Get(ctx, productionID)
+func (s *Service) ReleaseJSON(_ context.Context, productionID string) ([]byte, error) {
+	a, err := s.repo.Get(productionID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +88,8 @@ func (s *Service) ReleaseJSON(ctx context.Context, productionID string) ([]byte,
 	return json.MarshalIndent(a.Release, "", "  ")
 }
 
-func (s *Service) ReleaseVTT(ctx context.Context, productionID string) ([]byte, error) {
-	a, err := s.repo.Get(ctx, productionID)
+func (s *Service) ReleaseVTT(_ context.Context, productionID string) ([]byte, error) {
+	a, err := s.repo.Get(productionID)
 	if err != nil {
 		return nil, err
 	}

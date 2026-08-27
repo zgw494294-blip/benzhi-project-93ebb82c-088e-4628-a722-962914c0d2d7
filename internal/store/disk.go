@@ -71,10 +71,7 @@ func (s *DiskStore) Create(ctx context.Context, aggregate domain.Aggregate, key,
 	return domain.CloneAggregate(aggregate), false, nil
 }
 
-func (s *DiskStore) Get(ctx context.Context, id string) (domain.Aggregate, error) {
-	if err := ctx.Err(); err != nil {
-		return domain.Aggregate{}, err
-	}
+func (s *DiskStore) Get(id string) (domain.Aggregate, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	env, ok := s.projects[id]

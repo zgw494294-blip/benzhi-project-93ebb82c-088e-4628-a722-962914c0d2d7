@@ -37,7 +37,7 @@ func (s *MemoryStore) Create(_ context.Context, agg domain.Aggregate, key, op st
 	return domain.CloneAggregate(agg), false, nil
 }
 
-func (s *MemoryStore) Get(_ context.Context, id string) (domain.Aggregate, error) {
+func (s *MemoryStore) Get(id string) (domain.Aggregate, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	env, ok := s.items[id]

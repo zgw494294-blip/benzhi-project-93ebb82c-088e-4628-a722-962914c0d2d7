@@ -46,7 +46,7 @@ func TestDiskStorePersistsAndReusesIdempotentResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer reopened.Close()
-	loaded, err := reopened.Get(context.Background(), "p1")
+	loaded, err := reopened.Get("p1")
 	if err != nil {
 		t.Fatal(err)
 	}

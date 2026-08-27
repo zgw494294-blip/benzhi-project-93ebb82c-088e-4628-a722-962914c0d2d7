@@ -17,8 +17,8 @@ type DiffResult struct {
 	Suffix      string `json:"unchanged_suffix"`
 }
 
-func (s *Service) CueDiff(ctx context.Context, productionID, cueID string, from, to int) (DiffResult, error) {
-	a, err := s.repo.Get(ctx, productionID)
+func (s *Service) CueDiff(_ context.Context, productionID, cueID string, from, to int) (DiffResult, error) {
+	a, err := s.repo.Get(productionID)
 	if err != nil {
 		return DiffResult{}, err
 	}

@@ -31,8 +31,8 @@ func (s *Service) UpdateProduction(ctx context.Context, id string, cmd UpdatePro
 	return Result{Value: saved, Idempotent: duplicate}, nil
 }
 
-func (s *Service) GetProduction(ctx context.Context, id string) (domain.Aggregate, error) {
-	return s.repo.Get(ctx, id)
+func (s *Service) GetProduction(_ context.Context, id string) (domain.Aggregate, error) {
+	return s.repo.Get(id)
 }
 
 func (s *Service) ListProductions(ctx context.Context) ([]domain.Production, error) {

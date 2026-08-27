@@ -10,7 +10,7 @@ type Mutation func(*domain.Aggregate) error
 
 type Repository interface {
 	Create(context.Context, domain.Aggregate, string, string) (domain.Aggregate, bool, error)
-	Get(context.Context, string) (domain.Aggregate, error)
+	Get(string) (domain.Aggregate, error)
 	Mutate(context.Context, string, int64, string, string, Mutation) (domain.Aggregate, bool, error)
 	List(context.Context) ([]domain.Production, error)
 	Close() error
