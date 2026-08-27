@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="口述影像脚本从时间轴标注到审校发布的单项目排演工作台">
+  <title>口述影像脚本排演台</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">无障碍影视制作</p>
+      <h1>口述影像脚本排演台</h1>
+      <p>在对白之间落笔，让画面被听见。</p>
+    </div>
+    <span id="connection" class="pill">服务检查中</span>
+  </header>
+
+  <main>
+    <section class="panel" id="create-panel">
+      <div class="section-title"><span>01</span><h2>制作建档</h2></div>
+      <form id="create-form" class="form-grid">
+        <label>片名<input name="title" value="海岸灯塔" required></label>
+        <label>语言<input name="language" value="zh-CN" required></label>
+        <label>成片时长（毫秒）<input name="duration_ms" type="number" value="30000" min="1" required></label>
+        <label>帧率<input name="frame_rate" type="number" value="25" min="1" step="0.01" required></label>
+        <button type="submit">建立制作项目</button>
+      </form>
+      <p class="hint">系统自动登记编剧、排演员与审校员示例角色，建立后仍可在 DRAFT/TIMELINED 阶段通过 API 调整。</p>
+      <div class="project-picker">
+        <label>继续制作项目<select id="project-list"><option value="">暂无项目</option></select></label>
+        <button id="resume-project" type="button" class="secondary">继续制作</button>
+      </div>
+      <p id="project-list-error" class="hint" role="alert"></p>
+    </section>
+
+    <section id="workspace" hidden>
+      <nav class="state-strip" aria-label="项目状态">
+        <span>DRAFT</span><span>TIMELINED</span><span>WRITING</span><span>REHEARSING</span>
+        <span>REVIEWING</span><span>REVISING</span><span>APPROVED</span><span>RELEASED</span>
+      </nav>
+      <div class="project-summary panel">
+        <div><p class="eyebrow">当前项目</p><h2 id="project-title">—</h2></div>
+        <dl><div><dt>状态</dt><dd id="project-state">—</dd></div><div><dt>修订号</dt><dd id="project-revision">—</dd></div><div><dt>时长</dt><dd id="project-duration">—</dd></div></dl>
+      </div>
+
+      <section class="panel" id="timeline-panel">
+        <div class="section-title"><span>02</span><h2>时间轴与候选窗口</h2></div>
+        <form id="segment-form" class="form-grid compact">
+          <input name="segment_id" type="hidden">
+          <label>区间类型<select name="kind"><option value="SCENE">场景</option><option value="DIALOGUE">对白占用</option><option value="MUSIC_EMPHASIS">音乐强调</option><option value="OCCUPIED">其他占用</option></select></label>
+          <label>所属场景<select name="scene_id" id="scene-select"><option value="">自动匹配</option></select></label>
+          <label>开始（毫秒）<input name="start_ms" type="number" value="0" min="0" required></label>
+          <label>结束（毫秒）<input name="end_ms" type="number" value="30000" min="1" required></label>
+          <label>标签<input name="label" value="第一场" required></label>
+          <button type="submit">添加区间</button>
+        </form>
+        <div class="button-row"><button id="windows-button" type="button" class="secondary">计算候选窗口</button><button id="finalize-button" type="button">完成时间轴</button></div>
+        <div id="timeline-output" class="cards"></div>
+      </section>
+
+      <section class="panel" id="cue-panel">
+        <div class="section-title"><span>03</span><h2>提示稿与版本</h2></div>
+        <form id="cue-form" class="form-grid compact">
+          <input name="cue_id" type="hidden">
+          <label>窗口开始<input name="window_start_ms" type="number" value="1200" min="0" required></label>
+          <label>窗口结束<input name="window_end_ms" type="number" value="6500" min="1" required></label>
+          <label class="wide">说话意图<input name="intent" value="平静交代环境" required></label>
+          <label class="wide">旁白文本<textarea name="text" rows="3" required>晨雾沿着海面散开，灯塔在远处亮起。</textarea></label>
+          <label>预计语速（字/秒）<input name="planned_chars_per_second" type="number" value="6" min="0.1" step="0.1" required></label>
+          <label>停顿预算（毫秒）<input name="pause_budget_ms" type="number" value="200" min="0" required></label>
+          <button type="submit">保存提示版本</button>
+        </form>
+        <div class="button-row"><button id="validate-button" type="button">执行提交校验</button></div>
+        <div id="cue-output" class="cards"></div>
+        <div id="validation-output" class="cards"></div>
+        <pre id="diff-output" class="output" hidden></pre>
+      </section>
+
+      <section class="panel" id="rehearsal-panel">
+        <div class="section-title"><span>04</span><h2>排演与审校</h2></div>
+        <p>快速排演会按当前固定提示版本生成实读测量；审校接受操作会逐项覆盖所有提示。</p>
+        <div class="button-row"><button id="rehearse-button" type="button">显示实读录入</button><button id="accept-button" type="button">接受全部提示</button><button id="approve-button" type="button">批准脚本</button></div>
+        <form id="rehearsal-form" class="form-grid compact" hidden>
+          <div id="rehearsal-inputs" class="wide"></div>
+          <button id="submit-rehearsal" type="submit">提交本轮排演</button>
+        </form>
+        <form id="review-form" class="form-grid compact review-form">
+          <label>提示<select name="cue_id" id="review-cue"></select></label>
+          <label>处置<select name="action"><option value="ACCEPT">接受</option><option value="REVISE">要求修订</option><option value="REJECT">驳回</option></select></label>
+          <label class="wide">理由（退修/驳回必填）<input name="reason" placeholder="说明可执行的修改依据"></label>
+          <label>审校员<input name="reviewer" value="顾审校" required></label>
+          <button type="submit">提交逐项处置</button>
+        </form>
+        <div id="review-output" class="cards"></div>
+      </section>
+
+      <section class="panel" id="release-panel">
+        <div class="section-title"><span>05</span><h2>不可变发布</h2></div>
+        <div class="button-row"><button id="release-button" type="button">生成发布快照</button><a id="json-download" class="button-link disabled">下载 JSON</a><a id="vtt-download" class="button-link disabled">下载 WebVTT</a></div>
+        <div id="release-preview" class="output">批准后可预览发布摘要。</div>
+        <pre id="release-output" class="output">等待批准与发布。</pre>
+      </section>
+    </section>
+  </main>
+
+  <aside id="notice" role="status" aria-live="polite"></aside>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
