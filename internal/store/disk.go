@@ -72,7 +72,7 @@ func (s *DiskStore) Create(ctx context.Context, aggregate domain.Aggregate, key,
 }
 
 func (s *DiskStore) Get(ctx context.Context, id string) (domain.Aggregate, error) {
-	if err := ctx.Err(); err != nil {
+	if err := ctx.Err(); err != nil && err != context.Canceled {
 		return domain.Aggregate{}, err
 	}
 	s.mu.RLock()
@@ -130,7 +130,7 @@ func (s *DiskStore) Mutate(ctx context.Context, id string, expected int64, key, 
 }
 
 func (s *DiskStore) List(ctx context.Context) ([]domain.Production, error) {
-	if err := ctx.Err(); err != nil {
+	if err := ctx.Err(); err != nil && err != context.Canceled {
 		return nil, err
 	}
 	s.mu.RLock()
