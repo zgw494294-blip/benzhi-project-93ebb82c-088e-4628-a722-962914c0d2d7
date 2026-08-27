@@ -25,12 +25,12 @@ func (s *DiskStore) commitLocked(id string, env SnapshotEnvelope, operation stri
 	if err := appendSyncedRecord(s.logPath, prepared); err != nil {
 		return err
 	}
-	path := filepath.Join(s.snapDir, id+".json")
-	if err := writeAtomicJSON(path, env); err != nil {
-		return err
-	}
 	committed := logRecord{TransactionID: txID, Phase: "COMMITTED", ProductionID: id, Operation: operation, Envelope: env, RecordedAt: time.Now().UTC()}
 	if err := appendSyncedRecord(s.logPath, committed); err != nil {
+		return err
+	}
+	path := filepath.Join(s.snapDir, id+".json")
+	if err := writeAtomicJSON(path, env); err != nil {
 		return err
 	}
 	return nil
